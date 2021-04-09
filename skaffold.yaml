@@ -2,7 +2,7 @@ apiVersion: skaffold/v1beta13
 kind: Config
 build:
   artifacts:
-    - image: keptnsandbox/onechart-service
+    - image: gimlet-io/onechart-service
       docker:
         dockerfile: Dockerfile
         buildArgs:
