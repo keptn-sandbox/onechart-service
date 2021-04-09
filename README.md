@@ -90,8 +90,6 @@ If you want to get more insights into processing those CloudEvents or even defin
 
 ### Common tasks
 
-* Build the binary: `go build -ldflags '-linkmode=external' -v -o keptn-service-template-go`
-* Run tests: `go test -race -v ./...`
 * Build the docker image: `docker build . -t keptnsandbox/keptn-service-template-go:dev` (Note: Ensure that you use the correct DockerHub account/organization)
 * Run the docker image locally: `docker run --rm -it -p 8080:8080 keptnsandbox/keptn-service-template-go:dev`
 * Push the docker image to DockerHub: `docker push keptnsandbox/keptn-service-template-go:dev` (Note: Ensure that you use the correct DockerHub account/organization)
