@@ -1,63 +1,35 @@
-# README
+# OneChart Service
 
-This is a Keptn Service Template written in GoLang. 
+This is a Keptn Service that provides a default Helm Chart template that can be used to deploy a service.
 
-Quick start:
-
-Remaining TODOs:
-
-1. Optional: Push your code an upstream git repo (e.g., GitHub) and adapt all links that contain `github.com` (e.g., to `github.com/your-username/simple-service`)
-1. Figure out whether your Kubernetes Deployment requires [any RBAC rules or a different service-account](https://github.com/keptn-sandbox/contributing#rbac-guidelines), and adapt [deploy/service.yaml](deploy/service.yaml) accordingly (initial setup is `serviceAccountName: keptn-default`).
-1. Last but not least: Remove this intro within the README file and make sure the README file properly states what this repository is about
-
----
-
-# keptn-service-template-go
-![GitHub release (latest by date)](https://img.shields.io/github/v/release/keptn-sandbox/keptn-service-template-go)
-[![Go Report Card](https://goreportcard.com/badge/github.com/keptn-sandbox/keptn-service-template-go)](https://goreportcard.com/report/github.com/keptn-sandbox/keptn-service-template-go)
-
-This implements a keptn-service-template-go for Keptn. If you want to learn more about Keptn visit us on [keptn.sh](https://keptn.sh)
+The default Helm chart is [OneChart](https://gimlet.io/onechart/getting-started/) from the Gimlet project.
 
 ## Compatibility Matrix
 
-*Please fill in your versions accordingly*
-
-| Keptn Version    | [Keptn-Service-Template-Go Docker Image](https://hub.docker.com/r/keptnsandbox/keptn-service-template-go/tags) |
+| Keptn Version    | [OneChart-Service Docker Image](https://hub.docker.com/r/keptnsandbox/onechart-service/tags) |
 |:----------------:|:----------------------------------------:|
-|       0.6.1      | keptnsandbox/keptn-service-template-go:0.1.0 |
-|       0.7.1      | keptnsandbox/keptn-service-template-go:0.1.1 |
-|       0.7.2      | keptnsandbox/keptn-service-template-go:0.1.2 |
+|       0.8.x      | keptnsandbox/onechart-service:0.1.0 |
 
 ## Installation
 
-The *keptn-service-template-go* can be installed as a part of [Keptn's uniform](https://keptn.sh).
-
 ### Deploy in your Kubernetes cluster
 
-To deploy the current version of the *keptn-service-template-go* in your Keptn Kubernetes cluster, apply the [`deploy/service.yaml`](deploy/service.yaml) file:
+To deploy the current version of the *onechart-service* in your Keptn Kubernetes cluster, apply the [`deploy/service.yaml`](deploy/service.yaml) file:
 
 ```console
 kubectl apply -f deploy/service.yaml
 ```
 
-This should install the `keptn-service-template-go` together with a Keptn `distributor` into the `keptn` namespace, which you can verify using
+This should install the `onechart-service` together with a Keptn `distributor` into the `keptn` namespace, which you can verify using
 
 ```console
-kubectl -n keptn get deployment keptn-service-template-go -o wide
-kubectl -n keptn get pods -l run=keptn-service-template-go
-```
-
-### Up- or Downgrading
-
-Adapt and use the following command in case you want to up- or downgrade your installed version (specified by the `$VERSION` placeholder):
-
-```console
-kubectl -n keptn set image deployment/keptn-service-template-go keptn-service-template-go=keptnsandbox/keptn-service-template-go:$VERSION --record
+kubectl -n keptn get deployment onechart-service
+kubectl -n keptn get pods -l run=onechart-service
 ```
 
 ### Uninstall
 
-To delete a deployed *keptn-service-template-go*, use the file `deploy/*.yaml` files from this repository and delete the Kubernetes resources:
+To delete a deployed *onechart-service*, use the file `deploy/*.yaml` files from this repository and delete the Kubernetes resources:
 
 ```console
 kubectl delete -f deploy/service.yaml
@@ -78,32 +50,22 @@ When writing code, it is recommended to follow the coding style suggested by the
 
 ### Where to start
 
-If you don't care about the details, your first entrypoint is [eventhandlers.go](eventhandlers.go). Within this file 
- you can add implementation for pre-defined Keptn Cloud events.
- 
-To better understand all variants of Keptn CloudEvents, please look at the [Keptn Spec](https://github.com/keptn/spec).
- 
-If you want to get more insights into processing those CloudEvents or even defining your own CloudEvents in code, please 
- look into [main.go](main.go) (specifically `processKeptnCloudEvent`), [deploy/service.yaml](deploy/service.yaml),
- consult the [Keptn docs](https://keptn.sh/docs/) as well as existing [Keptn Core](https://github.com/keptn/keptn) and
- [Keptn Contrib](https://github.com/keptn-contrib/) services.
+- This service handles `sh.keptn.event.service.create.started` events. 
+- This service creates a Helm chart based on OneChart. The input that is coming in is the name of the project. 
+  Other details such as the image name are not yet available at this point. You can find the spec of the cloud event that is coming in here.
+- The event handle code is in https://github.com/keptn-sandbox/onechart-service/blob/master/eventhandlers.go#L27
 
 ### Common tasks
 
-* Build the docker image: `docker build . -t keptnsandbox/keptn-service-template-go:dev` (Note: Ensure that you use the correct DockerHub account/organization)
-* Run the docker image locally: `docker run --rm -it -p 8080:8080 keptnsandbox/keptn-service-template-go:dev`
-* Push the docker image to DockerHub: `docker push keptnsandbox/keptn-service-template-go:dev` (Note: Ensure that you use the correct DockerHub account/organization)
-* Deploy the service using `kubectl`: `kubectl apply -f deploy/`
-* Delete/undeploy the service using `kubectl`: `kubectl delete -f deploy/`
+
+
+* Build the docker image: `make docker-build`
+* Run the docker image locally: `make docker-run`
+* Push the docker image to DockerHub: `make docker-push`
+* Deploy the service: `make deploy`
+* Do a full dev iteration with: `make iterate`
 * Watch the deployment using `kubectl`: `kubectl -n keptn get deployment keptn-service-template-go -o wide`
-* Get logs using `kubectl`: `kubectl -n keptn logs deployment/keptn-service-template-go -f`
-* Watch the deployed pods using `kubectl`: `kubectl -n keptn get pods -l run=keptn-service-template-go`
-* Deploy the service using [Skaffold](https://skaffold.dev/): `skaffold run --default-repo=your-docker-registry --tail` (Note: Replace `your-docker-registry` with your DockerHub username; also make sure to adapt the image name in [skaffold.yaml](skaffold.yaml))
-
-
-### Testing Cloud Events
-
-We have dummy cloud-events in the form of [RFC 2616](https://ietf.org/rfc/rfc2616.txt) requests in the [test-events/](test-events/) directory. These can be easily executed using third party plugins such as the [Huachao Mao REST Client in VS Code](https://marketplace.visualstudio.com/items?itemName=humao.rest-client).
+* Get logs using `kubectl`: `kubectl -n keptn logs deployment/onechart-service -f`
 
 ## Automation
 
