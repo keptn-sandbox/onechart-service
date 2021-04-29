@@ -546,7 +546,7 @@ func _main(args []string, env envConfig) int {
 
 	keptnOptions.ConfigurationServiceURL = env.ConfigurationServiceUrl
 
-	log.Println("Starting keptn-service-template-go...")
+	log.Println("Starting onechart-service...")
 	log.Printf("    on Port = %d; Path=%s", env.Port, env.Path)
 
 	ctx := context.Background()
