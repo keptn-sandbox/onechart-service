@@ -19,3 +19,7 @@ docker-push:
 
 deploy:
 	kubectl apply -f deploy/
+
+iterate: docker-build docker-push deploy
+	kubectl scale deployment --replicas 0 onechart-service
+	kubectl scale deployment --replicas 1 onechart-service
