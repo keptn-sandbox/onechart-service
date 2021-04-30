@@ -23,6 +23,19 @@ func GenericLogKeptnCloudEventHandler(myKeptn *keptnv2.Keptn, incomingEvent clou
 	return nil
 }
 
+// ProjectCreateStartedEventHandlerData that initiates a OneChart Helm chart for the project
+func ProjectCreateStartedEventHandlerData(myKeptn *keptnv2.Keptn, incomingEvent cloudevents.Event, data interface{}) error {
+	log.Printf("Handling %s Event: %s", incomingEvent.Type(), incomingEvent.Context.GetID())
+	log.Printf("CloudEvent %T: %v", data, data)
+
+	var eventData *keptnv2.ProjectCreateStartedEventData
+	eventData = data.(*keptnv2.ProjectCreateStartedEventData)
+
+	log.Printf("Project %s is being created..", eventData.Project)
+
+	return nil
+}
+
 // OldHandleConfigureMonitoringEvent handles old configure-monitoring events
 // TODO: add in your handler code
 func OldHandleConfigureMonitoringEvent(myKeptn *keptnv2.Keptn, incomingEvent cloudevents.Event, data *keptn.ConfigureMonitoringEventData) error {

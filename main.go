@@ -131,7 +131,7 @@ func processKeptnCloudEvent(ctx context.Context, event cloudevents.Event) error 
 		eventData := &keptnv2.ProjectCreateStartedEventData{}
 		parseKeptnCloudEventPayload(event, eventData)
 
-		return GenericLogKeptnCloudEventHandler(myKeptn, event, eventData)
+		return ProjectCreateStartedEventHandlerData(myKeptn, event, eventData)
 	case keptnv2.GetFinishedEventType(keptnv2.ProjectCreateTaskName): // sh.keptn.event.project.create.finished
 		log.Printf("Processing Project.Create.Finished Event")
 		// Please note: Processing .started, .status.changed and .finished events is only recommended when you want to
@@ -546,7 +546,7 @@ func _main(args []string, env envConfig) int {
 
 	keptnOptions.ConfigurationServiceURL = env.ConfigurationServiceUrl
 
-	log.Println("Starting keptn-service-template-go...")
+	log.Println("Starting onechart-service...")
 	log.Printf("    on Port = %d; Path=%s", env.Port, env.Path)
 
 	ctx := context.Background()
