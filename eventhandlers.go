@@ -2,12 +2,19 @@ package main
 
 import (
 	"fmt"
+	"github.com/keptn/keptn/cli/cmd"
+	"github.com/keptn/keptn/cli/pkg/logging"
+	"helm.sh/helm/v3/pkg/action"
+	helmCLI "helm.sh/helm/v3/pkg/cli"
 	"log"
+	"os"
 	"time"
 
 	cloudevents "github.com/cloudevents/sdk-go/v2" // make sure to use v2 cloudevents here
+	apiutils "github.com/keptn/go-utils/pkg/api/utils"
 	keptn "github.com/keptn/go-utils/pkg/lib"
 	keptnv2 "github.com/keptn/go-utils/pkg/lib/v0_2_0"
+	keptnutils "github.com/keptn/kubernetes-utils/pkg"
 )
 
 /**
@@ -28,11 +35,82 @@ func ProjectCreateStartedEventHandlerData(myKeptn *keptnv2.Keptn, incomingEvent 
 	log.Printf("Handling %s Event: %s", incomingEvent.Type(), incomingEvent.Context.GetID())
 	log.Printf("CloudEvent %T: %v", data, data)
 
-	var eventData *keptnv2.ProjectCreateStartedEventData
-	eventData = data.(*keptnv2.ProjectCreateStartedEventData)
+	var eventData *keptnv2.ServiceCreateFinishedEventData
+	eventData = data.(*keptnv2.ServiceCreateFinishedEventData)
 
-	log.Printf("Project %s is being created..", eventData.Project)
+	endPoint := os.Getenv("CONFIGURATION_SERVICE")
+	scheme := "http"
+	apiToken := os.Getenv("API_TOKEN")
 
+	log.Printf("Starting to onboard service")
+
+	if endPointErr := cmd.CheckEndpointStatus(endPoint); endPointErr != nil {
+		err := fmt.Errorf("error connecting to server: %s", endPointErr)
+		log.Fatal(err)
+		return err
+	}
+
+	log.Printf("Connecting to server %s", endPoint)
+
+	// initialize handlers
+	resourceHandler := apiutils.NewAuthenticatedResourceHandler(endPoint, apiToken, "x-token", nil, scheme)
+	stagesHandler := apiutils.NewAuthenticatedStageHandler(endPoint, apiToken, "x-token", nil, scheme)
+	chartStorer := keptnutils.NewChartStorer(resourceHandler)
+
+	// get all stages
+	stages, err2 := stagesHandler.GetAllStages(eventData.Project)
+	if err2 != nil {
+		err := fmt.Errorf("failed to retrieve stages for project %s: %v", eventData.Project, err2)
+		log.Fatal(err)
+		return err
+	}
+
+	if len(stages) == 0 {
+		fmt.Println("No stages found")
+		return nil
+	}
+
+	chartLoader := action.NewShow(action.ShowChart)
+	var settings = helmCLI.New()
+
+	chartRepository := os.Getenv("CHART_REPOSITORY")
+	chartVersion := os.Getenv("CHART_VERSION")
+	chartName := os.Getenv("CHART_NAME")
+
+	chartLoader.ChartPathOptions.RepoURL = chartRepository
+	chartLoader.ChartPathOptions.Version = chartVersion
+	chartPath, err := chartLoader.ChartPathOptions.LocateChart(chartName, settings)
+	if err != nil {
+		err := fmt.Errorf("could not load %s Helm chart", err.Error())
+		log.Fatal(err)
+		return err
+	}
+
+	chart, err := keptnutils.LoadChartFromPath(chartPath)
+	if err != nil {
+		return err
+	}
+	chartData, err := keptnutils.NewChartPackager().Package(chart)
+	if err != nil {
+		return err
+	}
+
+	for _, stage := range stages {
+		storeOpts := keptnutils.StoreChartOptions{
+			Project:   eventData.Project,
+			Service:   eventData.Service,
+			Stage:     stage.StageName,
+			ChartName: eventData.Service,
+			HelmChart: chartData,
+		}
+
+		if _, err := chartStorer.Store(storeOpts); err != nil {
+			logging.PrintLog("Error when storing the Helm Chart: "+err.Error(), logging.QuietLevel)
+			return fmt.Errorf("onboard service: Storing charts was unsuccessful. %v", err)
+		}
+	}
+
+	log.Printf("Service onboarded successfully")
 	return nil
 }
 
@@ -177,8 +255,8 @@ func HandleGetSliTriggeredEvent(myKeptn *keptnv2.Keptn, incomingEvent cloudevent
 	// Step 8 - Build get-sli.finished event data
 	getSliFinishedEventData := &keptnv2.GetSLIFinishedEventData{
 		EventData: keptnv2.EventData{
-			Status:  keptnv2.StatusSucceeded,
-			Result:  keptnv2.ResultPass,
+			Status: keptnv2.StatusSucceeded,
+			Result: keptnv2.ResultPass,
 		},
 		GetSLI: keptnv2.GetSLIFinished{
 			IndicatorValues: sliResults,
@@ -232,8 +310,8 @@ func HandleActionTriggeredEvent(myKeptn *keptnv2.Keptn, incomingEvent cloudevent
 		// 3. Send Action.Finished Cloud-Event
 		// -----------------------------------------------------
 		myKeptn.SendTaskFinishedEvent(&keptnv2.EventData{
-			Status: keptnv2.StatusSucceeded, // alternative: keptnv2.StatusErrored
-			Result: keptnv2.ResultPass, // alternative: keptnv2.ResultFailed
+			Status:  keptnv2.StatusSucceeded, // alternative: keptnv2.StatusErrored
+			Result:  keptnv2.ResultPass,      // alternative: keptnv2.ResultFailed
 			Message: "Successfully sleeped!",
 		}, ServiceName)
 

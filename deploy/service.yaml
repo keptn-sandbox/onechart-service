@@ -23,7 +23,15 @@ spec:
             - containerPort: 8080
           env:
             - name: CONFIGURATION_SERVICE
-              value: 'http://configuration-service:8080'
+              value: 'http://172.21.0.2.nip.io/api' # output of `http://$(kubectl -n keptn get ingress api-keptn-ingress -ojsonpath='{.spec.rules[0].host}')/api`
+            - name: API_TOKEN
+              value: "xxx" # output of `kubectl get secret keptn-api-token -n keptn -ojsonpath='{.data.keptn-api-token}' | base64 --decode`
+            - name: CHART_REPOSITORY
+              value: "https://laszlocph.github.io/onechart"
+            - name: CHART_NAME
+              value: "onechart"
+            - name: CHART_VERSION
+              value: "0.24.0"
         - name: distributor
           image: keptn/distributor:0.8.0-alpha
           livenessProbe:
