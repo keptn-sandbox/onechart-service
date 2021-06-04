@@ -31,7 +31,7 @@ spec:
             - name: CHART_NAME
               value: "onechart"
             - name: CHART_VERSION
-              value: "0.23.0"
+              value: "0.24.0"
         - name: distributor
           image: keptn/distributor:0.8.0-alpha
           livenessProbe:
